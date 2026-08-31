@@ -1,4 +1,4 @@
-name: Demo 3 - CI with Real Tests
+name: Demo 3 - 3 Stages CI/CD
 
 on:
   push:
@@ -16,41 +16,75 @@ permissions:
   id-token: write
 
 jobs:
-  test-job:
+  # STAGE 1: BUILD
+  build-job:
     runs-on: ubuntu-latest
     steps:
-      - uses: actions/checkout@v4
+      - name: 1. Checkout
+        uses: actions/checkout@v5
 
-      - uses: actions/setup-node@v4
+      - name: 2. Setup Node.js
+        uses: actions/setup-node@v4
         with:
           node-version: '20'
           cache: 'npm'
           cache-dependency-path: demo3-tests/package.json
 
-      - name: Install Dependencies
+      - name: 3. Install Dependencies
         working-directory: ./demo3-tests
         run: npm ci
 
-      - name: Run Unit Tests with Jest
+      - name: 4. Build App
         working-directory: ./demo3-tests
-        run: npm test
+        run: |
+          echo "Building..."
+          mkdir -p dist
+          cp index.html dist/
+          cp app.js dist/
+          echo "Build #${{ github.run_number }} - Commit ${{ github.sha }}"
+          echo "Build completed"
 
-      - name: Run Tests with Coverage
+      - name: 5. Upload Build Artifact
+        uses: actions/upload-artifact@v4
+        with:
+          name: build-artifact
+          path: demo3-tests/dist
+          retention-days: 1
+
+  # STAGE 2: TEST
+  test-job:
+    needs: build-job
+    runs-on: ubuntu-latest
+    steps:
+      - name: 1. Checkout
+        uses: actions/checkout@v5
+
+      - name: 2. Setup Node.js
+        uses: actions/setup-node@v4
+        with:
+          node-version: '20'
+          cache: 'npm'
+          cache-dependency-path: demo3-tests/package.json
+
+      - name: 3. Install Dependencies
+        working-directory: ./demo3-tests
+        run: npm ci
+
+      - name: 4. Download Build Artifact
+        uses: actions/download-artifact@v4
+        with:
+          name: build-artifact
+          path: demo3-tests/dist
+
+      - name: 5. Run Unit Tests
+        working-directory: ./demo3-tests
+        run: npm test -- --verbose
+
+      - name: 6. Run Coverage
         working-directory: ./demo3-tests
         run: npm run test:coverage
 
-      - name: Build Check
-        run: |
-          echo "Build #${{ github.run_number }} passed all tests"
-          ls -lh demo3-tests/
-
-      - name: Upload Test Results
-        uses: actions/upload-artifact@v4
-        with:
-          name: demo3-test-results-${{ github.run_number }}
-          path: demo3-tests/coverage
-          retention-days: 7
-
+  # STAGE 3: DEPLOY
   deploy-job:
     needs: test-job
     runs-on: ubuntu-latest
@@ -58,10 +92,21 @@ jobs:
       name: github-pages
       url: ${{ steps.deployment.outputs.page_url }}
     steps:
-      - uses: actions/checkout@v4
-      - uses: actions/configure-pages@v4
-      - uses: actions/upload-pages-artifact@v3
+      - name: 1. Checkout
+        uses: actions/checkout@v5
+
+      - name: 2. Setup Pages
+        uses: actions/configure-pages@v5
+
+      - name: 3. Upload to Cloud
+        uses: actions/upload-pages-artifact@v3
         with:
           path: './demo3-tests'
-      - id: deployment
+
+      - name: 4. Deploy to Live
+        id: deployment
         uses: actions/deploy-pages@v4
+
+      - name: 5. Success
+        run: echo " Live at ${{ steps.deployment.outputs.page_url }}"
+
