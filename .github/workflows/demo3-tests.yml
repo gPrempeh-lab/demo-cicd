@@ -1,0 +1,67 @@
+name: Demo 3 - CI with Real Tests
+
+on:
+  push:
+    branches: [ main ]
+    paths:
+      - 'demo3-tests/**'
+      - '.github/workflows/demo3-tests.yml'
+  pull_request:
+    branches: [ main ]
+  workflow_dispatch:
+
+permissions:
+  contents: read
+  pages: write
+  id-token: write
+
+jobs:
+  test-job:
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+
+      - uses: actions/setup-node@v4
+        with:
+          node-version: '20'
+          cache: 'npm'
+          cache-dependency-path: demo3-tests/package.json
+
+      - name: Install Dependencies
+        working-directory: ./demo3-tests
+        run: npm ci
+
+      - name: Run Unit Tests with Jest
+        working-directory: ./demo3-tests
+        run: npm test
+
+      - name: Run Tests with Coverage
+        working-directory: ./demo3-tests
+        run: npm run test:coverage
+
+      - name: Build Check
+        run: |
+          echo "Build #${{ github.run_number }} passed all tests"
+          ls -lh demo3-tests/
+
+      - name: Upload Test Results
+        uses: actions/upload-artifact@v4
+        with:
+          name: demo3-test-results-${{ github.run_number }}
+          path: demo3-tests/coverage
+          retention-days: 7
+
+  deploy-job:
+    needs: test-job
+    runs-on: ubuntu-latest
+    environment:
+      name: github-pages
+      url: ${{ steps.deployment.outputs.page_url }}
+    steps:
+      - uses: actions/checkout@v4
+      - uses: actions/configure-pages@v4
+      - uses: actions/upload-pages-artifact@v3
+        with:
+          path: './demo3-tests'
+      - id: deployment
+        uses: actions/deploy-pages@v4
