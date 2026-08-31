@@ -30,10 +30,10 @@ jobs:
 
      - name: 6. Simulate Deploy to Cloud (CD)
        run: |
-         echo "✅ Build successful!"
-         echo "✅ Tests passed!"
-         echo "🚀 Deploying to Cloud..."
-         echo "🌐 App would be live at: https://demo-cicd-demo.azurewebsites.net"
+         echo "Build successful!"
+         echo "Tests passed!"
+         echo "Deploying to Cloud..."
+         echo "App would be live at: https://demo-cicd-demo.azurewebsites.net"
          echo "Demo completed without Azure account"
 
      - name: 7. Upload Build Artifact (like real CD)
