@@ -1,0 +1,45 @@
+name: Demo CI/CD - GitHub Only
+
+on:
+ push:
+   branches: [ main ]
+ pull_request:
+   branches: [ main ]
+
+jobs:
+ ci-cd-demo:
+   runs-on: ubuntu-latest
+
+   steps:
+     - name: 1. Get Code
+       uses: actions/checkout@v4
+
+     - name: 2. Setup Node.js
+       uses: actions/setup-node@v4
+       with:
+         node-version: '20'
+
+     - name: 3. Install Dependencies (CI)
+       run: npm ci
+
+     - name: 4. Run Tests (CI)
+       run: npm test
+
+     - name: 5. Build App (CI)
+       run: npm run build
+
+     - name: 6. Simulate Deploy to Cloud (CD)
+       run: |
+         echo "✅ Build successful!"
+         echo "✅ Tests passed!"
+         echo "🚀 Deploying to Cloud..."
+         echo "🌐 App would be live at: https://demo-cicd-demo.azurewebsites.net"
+         echo "Demo completed without Azure account"
+
+     - name: 7. Upload Build Artifact (like real CD)
+       uses: actions/upload-artifact@v4
+       with:
+         name: demo-app-build
+         path: |
+           index.js
+           package.json
