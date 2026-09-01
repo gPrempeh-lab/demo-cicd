@@ -1,0 +1,56 @@
+<!doctype html>
+<html lang="en">
+  <head>
+    <meta charset="UTF-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+    <title>{{SITE_NAME}}</title>
+    <style>
+      body {
+        font-family: sans-serif;
+        text-align: center;
+        margin-top: 80px;
+        background: #f0f2f5;
+      }
+      .card {
+        background: white;
+        padding: 40px;
+        border-radius: 12px;
+        max-width: 650px;
+        margin: auto;
+        box-shadow: 0 4px 12px rgba(0, 0, 0, 0.1);
+      }
+      .badge {
+        background: #007bff;
+        color: white;
+        padding: 6px 12px;
+        border-radius: 20px;
+        font-size: 14px;
+        margin: 4px;
+        display: inline-block;
+      }
+      .env-prod {
+        background: #28a745;
+      }
+    </style>
+  </head>
+  <body>
+    <div class="card">
+      <h1>Demo 4 - Variables & Secrets</h1>
+      <h2>{{SITE_NAME}}</h2>
+      <p>
+        <span class="badge">Build #{{BUILD_NUMBER}}</span>
+        <span class="badge">Commit: {{COMMIT_SHA}}</span>
+        <span class="badge env-prod">{{ENV_NAME}}</span>
+      </p>
+      <hr />
+      <p id="secret-msg">{{SECRET_STATUS}}</p>
+      <p>API URL: <code>{{API_URL}}</code></p>
+      <p>
+        <small
+          >Values injected from GitHub Settings during build - not
+          hardcoded</small
+        >
+      </p>
+    </div>
+  </body>
+</html>

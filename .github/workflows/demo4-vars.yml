@@ -1,0 +1,81 @@
+name: Demo 4 - Variables & Secrets
+
+on:
+  push:
+    branches: [ main ]
+    paths:
+      - 'demo4-vars/**'
+      - '.github/workflows/demo4-vars.yml'
+  workflow_dispatch:
+
+permissions:
+  contents: read
+  pages: write
+  id-token: write
+
+jobs:
+  build-job:
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v5
+      - uses: actions/setup-node@v4
+        with:
+          node-version: '24'
+          cache: 'npm'
+          cache-dependency-path: demo4-vars/package.json
+
+      - name: Install
+        working-directory: ./demo4-vars
+        run: npm ci
+
+      - name: Build with Variables & Secrets Injection
+        working-directory: ./demo4-vars
+        run: npm run build
+        env:
+          SITE_NAME: ${{ vars.SITE_NAME }}
+          API_URL: ${{ vars.API_URL }}
+          BUILD_NUMBER: ${{ github.run_number }}
+          COMMIT_SHA: ${{ github.sha }}
+          ENV_NAME: production
+          MY_SECRET_MESSAGE: ${{ secrets.MY_SECRET_MESSAGE }}
+
+      - name: Show final HTML
+        run: cat demo4-vars/dist/index.html
+
+      - uses: actions/upload-artifact@v4
+        with:
+          name: demo4-build
+          path: demo4-vars/dist
+
+  test-job:
+    needs: build-job
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v5
+      - uses: actions/setup-node@v4
+        with:
+          node-version: '24'
+          cache: 'npm'
+          cache-dependency-path: demo4-vars/package.json
+      - working-directory: ./demo4-vars
+        run: |
+          npm ci
+          npm test
+
+  deploy-job:
+    needs: test-job
+    runs-on: ubuntu-latest
+    environment:
+      name: github-pages
+      url: ${{ steps.deployment.outputs.page_url }}
+    steps:
+      - uses: actions/download-artifact@v4
+        with:
+          name: demo4-build
+          path: ./demo4-vars/dist
+      - uses: actions/configure-pages@v5
+      - uses: actions/upload-pages-artifact@v3
+        with:
+          path: './demo4-vars/dist'
+      - id: deployment
+        uses: actions/deploy-pages@v4
