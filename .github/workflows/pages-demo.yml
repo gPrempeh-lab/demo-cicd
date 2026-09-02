@@ -61,6 +61,7 @@ jobs:
   # JOB 2: CD - Deploy (only if CI passes)
   deploy-pages:
     needs: ci-checks # waits for CI to pass
+    if: github.event_name == 'push'
     runs-on: ubuntu-latest
     environment:
       name: github-pages
