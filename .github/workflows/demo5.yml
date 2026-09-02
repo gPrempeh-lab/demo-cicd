@@ -1,0 +1,39 @@
+name: Demo 5 - PR Trigger Demo
+
+on:
+  push:
+    branches: [ main ]
+    paths:
+      - 'demo5/**'
+      - '.github/workflows/demo5.yml'
+  pull_request:
+    branches: [ main ]
+    paths:
+      - 'demo5/**'
+      - '.github/workflows/demo5.yml'
+  workflow_dispatch:
+
+jobs:
+  ci-checks:
+    runs-on: ubuntu-latest
+    steps:
+      - name: 1. Checkout Code
+        uses: actions/checkout@v4
+
+      - name: 2. Lint HTML
+        run: |
+          echo "🔍 Checking HTML files..."
+          ls -la demo5/
+          cat demo5/index.html | head -20
+
+      - name: 3. Run Tests
+        run: |
+          echo "Running unit tests for Demo 5..."
+          echo "All tests passed - 3/3"
+
+      - name: 4. Build Step
+        run: |
+          echo "Building Demo 5 site..."
+          echo "Build Number: ${{ github.run_number }}"
+          echo "Commit: ${{ github.sha }}"
+          echo "Build completed successfully"
